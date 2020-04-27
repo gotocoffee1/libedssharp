@@ -440,14 +440,25 @@ namespace libEDSsharp
                     }
                 }
 
-                AppLayer.CANopenObjectList.CANopenObject[count].dataType = bytes;
+
+                if (od.objecttype != ObjectType.ARRAY && od.objecttype != ObjectType.REC)
+                {
+                    //#209 don't set data type for array or rec objects, the subobjects hold 
+                    //the data type
+                    AppLayer.CANopenObjectList.CANopenObject[count].dataType = bytes;
+                    AppLayer.CANopenObjectList.CANopenObject[count].accessType = (CANopenObjectListCANopenObjectAccessType)Enum.Parse(typeof(CANopenObjectListCANopenObjectAccessType), accesstype.ToString());
+                    AppLayer.CANopenObjectList.CANopenObject[count].accessTypeSpecified = true;
+
+                }
+                else
+                {
+                    AppLayer.CANopenObjectList.CANopenObject[count].accessTypeSpecified = false;
+                }
+
                 AppLayer.CANopenObjectList.CANopenObject[count].PDOmapping = (CANopenObjectListCANopenObjectPDOmapping)Enum.Parse(typeof(CANopenObjectListCANopenObjectPDOmapping),PDOtype.ToString());
                 AppLayer.CANopenObjectList.CANopenObject[count].PDOmappingSpecified = true;
 
                 AppLayer.CANopenObjectList.CANopenObject[count].uniqueIDRef = String.Format("UID_PARAM_{0:x4}", od.Index);
-
-                AppLayer.CANopenObjectList.CANopenObject[count].accessType = (CANopenObjectListCANopenObjectAccessType)Enum.Parse(typeof(CANopenObjectListCANopenObjectAccessType), accesstype.ToString());
-                AppLayer.CANopenObjectList.CANopenObject[count].accessTypeSpecified = true;
 
                 AppLayer.CANopenObjectList.CANopenObject[count].denotation = od.denotation;
                 AppLayer.CANopenObjectList.CANopenObject[count].edseditor_extenstion_storagelocation = od.StorageLocation;
@@ -482,6 +493,8 @@ namespace libEDSsharp
                         AppLayer.CANopenObjectList.CANopenObject[count].CANopenSubObject[subcount].objectType = (byte)subod.objecttype;
 
                         AppLayer.CANopenObjectList.CANopenObject[count].CANopenSubObject[subcount].denotation = subod.denotation;
+
+                        AppLayer.CANopenObjectList.CANopenObject[count].CANopenSubObject[subcount].edseditor_extension_notifyonchange = subod.TPDODetectCos;
 
                         bytes = BitConverter.GetBytes((UInt16)subod.datatype);
                         Array.Reverse(bytes);
@@ -1026,6 +1039,7 @@ namespace libEDSsharp
                                 }
 
 
+                       
                                 // https://github.com/robincornelius/libedssharp/issues/128
                                 // Mapping of accesstype and pdo mappings have changed between EDS and XDD
                                 // in EDS we have rw,wo, r and const which are the same in both standards, but EDS also
@@ -1069,7 +1083,10 @@ namespace libEDSsharp
 
                                 //extra items
 
-                                if(subobj.lowLimit!=null)
+                                if (subobj.edseditor_extension_notifyonchange != null)
+                                    subentry.TPDODetectCos = subobj.edseditor_extension_notifyonchange;
+
+                                if (subobj.lowLimit!=null)
                                     subentry.LowLimit = subobj.lowLimit;
 
                                 if(subobj.highLimit!=null)
@@ -3167,6 +3184,22 @@ namespace XSDImport
         private byte[] objFlagsField;
 
         private string uniqueIDRefField;
+
+        private bool edseditor_extension_notifyonchangeField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool edseditor_extension_notifyonchange
+        {
+            get
+            {
+                return this.edseditor_extension_notifyonchangeField;
+            }
+            set
+            {
+                this.edseditor_extension_notifyonchangeField = value;
+            }
+        }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute(DataType = "hexBinary")]

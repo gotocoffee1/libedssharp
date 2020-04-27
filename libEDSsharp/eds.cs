@@ -571,7 +571,7 @@ namespace libEDSsharp
             {
                 if (section.ContainsKey("CreationTime") && section.ContainsKey("CreationDate"))
                 {
-                    dtcombined = section["CreationTime"] + " " + section["CreationDate"];
+                    dtcombined = section["CreationTime"].Replace(" ","") + " " + section["CreationDate"];
                     CreationDateTime = DateTime.ParseExact(dtcombined, "h:mmtt MM-dd-yyyy", CultureInfo.InvariantCulture);
                 }
             }
@@ -587,7 +587,7 @@ namespace libEDSsharp
             {
                 if (section.ContainsKey("ModificationTime") && section.ContainsKey("ModificationTime"))
                 {
-                    dtcombined = section["ModificationTime"] + " " + section["ModificationDate"];
+                    dtcombined = section["ModificationTime"].Replace(" ", "") + " " + section["ModificationDate"];
                     ModificationDateTime = DateTime.ParseExact(dtcombined, "h:mmtt MM-dd-yyyy", CultureInfo.InvariantCulture);
                 }
             }
@@ -899,13 +899,6 @@ namespace libEDSsharp
 
     }
 
-    public class ODSubentry : ODentry
-    {
-
-
-    }
-
-
     public class ODentry
     {
 
@@ -1184,11 +1177,11 @@ namespace libEDSsharp
             {
                 writer.WriteLine(string.Format("SubNumber=0x{0:X}", Nosubindexes));
             }
+
             if (objecttype == ObjectType.REC)
             {
                 writer.WriteLine(string.Format("SubNumber=0x{0:X}", Nosubindexes));
             }
-
 
             if (objecttype == ObjectType.VAR)
             {
@@ -1218,6 +1211,13 @@ namespace libEDSsharp
                 }
 
                 writer.WriteLine(string.Format("PDOMapping={0}", PDOMapping==true?1:0));
+
+                if (TPDODetectCos == true)
+                {
+                    writer.WriteLine(";TPDODetectCos=1");
+                }
+
+
             }
 
             //Count is for modules in the [MxSubExtxxxx]
@@ -1650,11 +1650,10 @@ namespace libEDSsharp
                     else
                     //Only allow our own extensions to populate the key/value pair
                     {
-                        if (key == "StorageLocation" || key == "LSS_Type")
+                        if (key == "StorageLocation" || key == "LSS_Type" || key== "TPDODetectCos")
                         {
                             eds[sectionname].Add(key, value);
                         }
-
                     }
                 }
             }
@@ -1743,7 +1742,18 @@ namespace libEDSsharp
                     od.StorageLocation = kvp.Value["StorageLocation"];
                 }
 
-                if(kvp.Value.ContainsKey("Count"))
+                if (kvp.Value.ContainsKey("TPDODetectCos"))
+                {
+                    string test = kvp.Value["TPDODetectCos"].ToLower();
+                    if (test == "1" || test == "true")
+                    {
+                        od.TPDODetectCos = true;                     
+                    }
+                    else
+                        od.TPDODetectCos = false; 
+                }
+
+                if (kvp.Value.ContainsKey("Count"))
                 {
                     od.count = Convert.ToByte(kvp.Value["Count"]);
                 }
@@ -2445,9 +2455,9 @@ namespace libEDSsharp
                 return 0;
             }
 
-            input = input.ToUpper(); //catch all types of nodeid
+    		input = input.ToUpper();
 
-            if (input.Contains("$NODEID"))
+            if(input.Contains("$NODEID"))     
                 nodeidpresent = true;
             else
                 nodeidpresent = false;

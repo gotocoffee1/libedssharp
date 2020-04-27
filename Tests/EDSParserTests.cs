@@ -9,7 +9,7 @@ using libEDSsharp;
 namespace Tests
 {
     [TestClass]
-    public class EDSParserTests : EDSsharp
+    public class EDSParserTests : libEDSsharp.EDSsharp
     {
 
         [TestMethod]
@@ -283,7 +283,7 @@ NrOfTXPDO=7
 
             UpdatePDOcount();
 
-            if(noexplicitrxpdos != di.NrOfRXPDO)
+            if (noexplicitrxpdos != di.NrOfRXPDO)
                 throw (new Exception("Implicit RX PDO incorrect"));
 
             if (noexplicittxpdos != di.NrOfTXPDO)
@@ -308,13 +308,53 @@ ProDucTNumbeR=test4
 
             string[] lines = testobject.Split('\n');
 
-            foreach(string line in lines)
+            foreach (string line in lines)
                 Parseline(line);
             DeviceInfo di = new DeviceInfo(eds["DeviceInfo"]);
 
         }
 
 
+        [TestMethod]
+        public void Test_datetimeparse()
+        {
+
+            FileInfo fi = new FileInfo();
+            Dictionary<string, string> section = new Dictionary<string, string>();
+            section.Add("CreationTime", "9:03AM");
+            section.Add("CreationDate", "04-27-2017");
+            fi.Parse(section);
+
+            fi = new FileInfo();
+            section = new Dictionary<string, string>();
+            section.Add("CreationTime", "10:15 AM");
+            section.Add("CreationDate", "10-08-2013");
+
+            fi.Parse(section);
+
+        }
+
+        [TestMethod]
+        public void Test_accesstype()
+        {
+            {
+                Dictionary<string, Dictionary<string, string>> section = new Dictionary<string, Dictionary<string, string>>();
+                section.Add("[1234]", new Dictionary<string, string>());
+                section["[1234]"].Add("AccessType", "ro");
+                KeyValuePair<string, Dictionary<string, string>> kvp = section.Single();
+                this.ParseEDSentry(kvp);
+            }
+
+            {
+                Dictionary<string, Dictionary<string, string>> section = new Dictionary<string, Dictionary<string, string>>();
+                section.Add("[1234]", new Dictionary<string, string>());
+                section["[1234]"].Add("AccessType", "RO");
+                KeyValuePair<string, Dictionary<string, string>> kvp = section.Single();
+                this.ParseEDSentry(kvp);
+            }
+
+
+        }
 
     }
 }
