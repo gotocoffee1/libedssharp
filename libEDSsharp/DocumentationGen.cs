@@ -184,15 +184,15 @@ namespace libEDSsharp
             file.WriteLine("Supported Baudrates:");
             file.WriteLine();
 
-            file.WriteLine($"- [{(eds.di.BaudRate_1000 ? "x" : " ")}] 1000 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_800 ? "x" : " ")}] 800 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_500 ? "x" : " ")}] 500 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_250 ? "x" : " ")}] 250 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_125 ? "x" : " ")}] 125 kBit/s");
-            //file.WriteLine($"- [{(true ? "x" : " ")}] 100 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_50 ? "x" : " ")}] 50 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_20 ? "x" : " ")}] 20 kBit/s");
-            file.WriteLine($"- [{(eds.di.BaudRate_10 ? "x" : " ")}] 10 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_1000 ? "x" : " ")}] 1000 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_800 ? "x" : " ")}] 800 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_500 ? "x" : " ")}] 500 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_250 ? "x" : " ")}] 250 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_125 ? "x" : " ")}] 125 kBit/s");
+            file.WriteLine($"* [{(true ? "x" : " ")}] 100 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_50 ? "x" : " ")}] 50 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_20 ? "x" : " ")}] 20 kBit/s");
+            file.WriteLine($"* [{(eds.di.BaudRate_10 ? "x" : " ")}] 10 kBit/s");
             file.WriteLine();
 
             file.WriteLine("# PDO Mapping");
@@ -289,10 +289,11 @@ namespace libEDSsharp
             
             file.WriteLine();
 
-            string description = od.Description;
-            file.WriteLine($"{description}");
-
-            file.WriteLine();
+            if (!string.IsNullOrWhiteSpace(od.Description))
+            { 
+                file.WriteLine(od.Description);
+                file.WriteLine();
+            }
 
             foreach (KeyValuePair<UInt16, ODentry> sub in od.subobjects)
             {
@@ -332,8 +333,12 @@ namespace libEDSsharp
                         if (subindex == 0)
                             continue;
 
-                        var data = Convert.ToUInt32(odsub.defaultvalue, EDSsharp.Getbase(odsub.defaultvalue));
-
+                        uint data = 0;
+                        try
+                        {
+                            data = Convert.ToUInt32(odsub.defaultvalue, EDSsharp.Getbase(odsub.defaultvalue));
+                        }
+                        catch (Exception) { }
                         if (data != 0)
                         {
                             byte datasize = (byte)(data & 0x000000FF);

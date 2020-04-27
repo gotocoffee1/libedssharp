@@ -975,6 +975,8 @@ namespace libEDSsharp
         {
             get
             {
+                if (this.parent != null && Subindex == 0)
+                    return false;
                 return PDOtype != PDOMappingType.no;
             }
         }
